@@ -1,4 +1,5 @@
 #!/usr/bin/python
+import argparse
 import praw
 import sys
 import yaml
@@ -45,18 +46,19 @@ def run_scheduler(db, praw_id, subreddit_name, wiki_config_page, dry_run=False):
             db.save_post_data( Post(config['id'], current_time, reddit_post.id))
             print "Saved, post is %s" % reddit_post.id
 
-praw_id = 'bot1'
-subreddit_name = 'stilltrying'
-wiki_config_page = 'stilltryingbot-config'
+parser = argparse.ArgumentParser()
+parser.add_argument("--dry-run", help="Show the actions that would be performed without doing them", action="store_true")
+parser.add_argument("--create", help="Create the database for the first run", action="store_true")
+parser.add_argument("--db", help="File used for the post database")
+parser.add_argument("--praw-id", help="Select the PRAW account ID to use")
+parser.add_argument("--subreddit", help="The subreddit to post to")
+parser.add_argument("--wiki-page", help="The wiki page on the subreddit that specifies the post configuration")
+args = parser.parse_args()
 
-dry_run = False
-if len(sys.argv) > 1 and sys.argv[1] == "--dry-run":
-    dry_run = True
+db = PostDB(args.db)
 
-db = PostDB('posts.db')
-
-if len(sys.argv) > 1 and sys.argv[1] == "--create":
+if args.create:
     db.create()
     sys.exit(0)
 
-run_scheduler(praw_id, subreddit_name, wiki_config_page, dry_run)
+run_scheduler(db, args.praw_id, args.subreddit, args.wiki_page, args.dry_run)
